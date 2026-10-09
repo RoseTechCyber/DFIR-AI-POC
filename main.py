@@ -393,17 +393,16 @@ def day3():
 # ------------------------------------------------------------
 
 def analyze_stage(question, stage):
-    question = question.strip()
-    if not question:
-        raise HTTPException(400, "A question is required.")
+    context = build_analysis_context()
 
-    context = build_context()
+    # Keep your existing AI analysis call here, if present.
 
-    # Deterministic checks are independent of the model response.
     if stage.startswith("Day 2"):
-    validation = validate_preservation(context["evidence"])
-else:
-    validation = validate_transfer(context["evidence"])
+        validation = validate_preservation(context["evidence"])
+    else:
+        validation = validate_transfer(context["evidence"])
+
+    # Keep the remaining existing code here.
     try:
         ai_response = generate_analysis(
             make_prompt(question, context, stage)
