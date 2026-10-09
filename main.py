@@ -498,3 +498,23 @@ def health():
         "case_id": CASE_ID,
         "evidence_file_exists": EVIDENCE_FILE.is_file(),
     }
+
+def validate_preservation(evidence):
+    missing_provenance = [
+        item.get("evidence_id", "unknown")
+        for item in evidence
+        if not item.get("source_reference") or not item.get("provenance")
+    ]
+
+    return {
+        "finding": "PRESERVATION REVIEW REQUIRED",
+        "confidence": "Requires examiner verification",
+        "missing_provenance_ids": missing_provenance,
+        "assessment": (
+            f"{len(evidence)} evidence records were reviewed. "
+            "Source references and provenance were checked for completeness. "
+            "Preservation is not confirmed merely because those fields exist; "
+            "verify acquisition records, cryptographic hashes, and chain of "
+            "custody independently."
+        ),
+    }
