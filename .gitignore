@@ -1,4 +1,11 @@
 __pycache__/
 *.pyc
-.venv/
 .env
+.env.*
+!.env.example
+.venv/
+*.py[cod]
+results/*
+!results/.gitkeep
+day2_result.txt
+day3_result.txt
