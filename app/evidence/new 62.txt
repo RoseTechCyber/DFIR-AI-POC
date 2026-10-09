@@ -1,0 +1,179 @@
+Absolutely. Let's start with **Day 3, Step 1: locking down the evidence schema**.
+
+We'll build this incrementally and keep the PoC working at every stage. Our first target is:
+
+**forensic artifact → normalized EvidenceItem → stored JSON → ready for Qwen3**
+
+### Step 1 — Create the project structure
+
+```text
+dfir-ai-poc/
+├── app/
+│   ├── agents/
+│   │   └── correlation_agent.py
+│   ├── evidence/
+│   │   ├── models.py
+│   │   └── store.py
+│   ├── tools/
+│   │   └── query_evidence.py
+│   └── main.py
+├── data/
+│   └── cases/
+│       └── CASE-001/
+│           └── evidence.json
+├── tests/
+└── requirements.txt
+```
+
+### Step 2 — Define the evidence object
+
+Start with a deliberately simple Python model:
+
+```python
+# app/evidence/models.py
+
+from datetime import datetime
+from pydantic import BaseModel, Field
+from typing import Any, Optional
+
+
+class EvidenceItem(BaseModel):
+    evidence_id: str
+    case_id: str
+
+    artifact_type: str
+    timestamp: Optional[datetime] = None
+
+    subject: Optional[str] = None
+    action: Optional[str] = None
+    object: Optional[str] = None
+    value: Optional[Any] = None
+
+    tool: str
+    confidence: float = Field(ge=0.0, le=1.0)
+
+    source_reference: Optional[str] = None
+    provenance: Optional[dict] = None
+```
+
+The important fields are:
+
+* **`evidence_id`** — permanent identifier
+* **`case_id`** — investigation association
+* **`artifact_type`** — USB, process, file, login, etc.
+* **`timestamp`** — temporal correlation
+* **`subject/action/object`** — makes different artifact types easier to correlate
+* **`tool`** — which forensic tool generated it
+* **`confidence`** — confidence of the *extraction*, not the AI's conclusion
+* **`source_reference`** — where the original evidence can be found
+* **`provenance`** — chain back to the source artifact
+
+### Step 3 — Give it some test evidence
+
+Create:
+
+```text
+data/cases/CASE-001/evidence.json
+```
+
+with:
+
+```json
+[
+  {
+    "evidence_id": "EV-001",
+    "case_id": "CASE-001",
+    "artifact_type": "usb_connection",
+    "timestamp": "2026-10-07T14:31:12Z",
+    "subject": "USER01",
+    "action": "connected",
+    "object": "USB_DEVICE_7",
+    "value": {
+      "vendor": "Example",
+      "serial": "USB12345"
+    },
+    "tool": "artifact_parser",
+    "confidence": 1.0,
+    "source_reference": "registry://USBSTOR/USB12345",
+    "provenance": {
+      "source_image": "disk01.E01",
+      "source_artifact": "USBSTOR"
+    }
+  },
+  {
+    "evidence_id": "EV-002",
+    "case_id": "CASE-001",
+    "artifact_type": "process",
+    "timestamp": "2026-10-07T14:32:05Z",
+    "subject": "USER01",
+    "action": "started",
+    "object": "powershell.exe",
+    "value": {
+      "pid": 4120
+    },
+    "tool": "process_parser",
+    "confidence": 1.0,
+    "source_reference": "memory://process/4120",
+    "provenance": {
+      "source_image": "memory.raw"
+    }
+  },
+  {
+    "evidence_id": "EV-003",
+    "case_id": "CASE-001",
+    "artifact_type": "file_access",
+    "timestamp": "2026-10-07T14:33:18Z",
+    "subject": "USER01",
+    "action": "accessed",
+    "object": "Confidential.docx",
+    "value": {
+      "path": "C:\\Users\\USER01\\Documents\\Confidential.docx"
+    },
+    "tool": "filesystem_parser",
+    "confidence": 1.0,
+    "source_reference": "ntfs://file/Confidential.docx",
+    "provenance": {
+      "source_image": "disk01.E01"
+    }
+  },
+  {
+    "evidence_id": "EV-004",
+    "case_id": "CASE-001",
+    "artifact_type": "usb_connection",
+    "timestamp": "2026-10-07T14:40:22Z",
+    "subject": "USER01",
+    "action": "disconnected",
+    "object": "USB_DEVICE_7",
+    "value": null,
+    "tool": "artifact_parser",
+    "confidence": 1.0,
+    "source_reference": "registry://USBSTOR/USB12345",
+    "provenance": {
+      "source_image": "disk01.E01",
+      "source_artifact": "USBSTOR"
+    }
+  }
+]
+```
+
+### Step 4 — Validate the evidence
+
+Run:
+
+```bash
+python -c "from app.evidence.models import EvidenceItem; import json; data=json.load(open('data/cases/CASE-001/evidence.json')); [EvidenceItem.model_validate(x) for x in data]; print('Evidence validation OK')"
+```
+
+You should get:
+
+```text
+Evidence validation OK
+```
+
+**Stop here initially.** Don't connect Qwen3 yet.
+
+Once this works, our next step is to build `query_evidence()` so the future Qwen agent can ask questions such as:
+
+> "Show me all evidence involving USB_DEVICE_7 between 14:30 and 14:41."
+
+That is the bridge between your **forensic evidence layer** and the **AI reasoning layer**.
