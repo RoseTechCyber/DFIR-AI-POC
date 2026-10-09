@@ -1,8 +1,4 @@
 fastapi
 uvicorn
 ollama
-<<<<<<< HEAD
 python-multipart
-=======
-python-multipart
->>>>>>> 331497e7c875d833500eeecf5a0d837cc7d9b3cd
