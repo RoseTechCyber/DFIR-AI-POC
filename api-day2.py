@@ -4,10 +4,18 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 import json
 import html
+import os
 
 app = FastAPI(title="DFIR AI Investigator")
 
-EVIDENCE_FILE = Path(r"C:\DFIR-POC\evidence.txt")
+BASE_DIR = Path(__file__).resolve().parent
+
+EVIDENCE_FILE = Path(
+    os.getenv(
+        "DFIR_DAY2_EVIDENCE_FILE",
+        str(BASE_DIR / "evidence.txt"),
+    )
+)
 RESULT_FILE = Path(r"C:\DFIR-POC\day2_result.txt")
 
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
