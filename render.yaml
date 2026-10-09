@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: dfir-ai-investigator
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: DFIR_EVIDENCE_FILE
+        value: data/cases/CASE-001/evidence.json
+      - key: DFIR_DAY2_EVIDENCE_FILE
+        value: evidence.txt
+      - key: OLLAMA_MODEL
+        value: qwen2.5:0.5b
