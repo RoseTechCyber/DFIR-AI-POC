@@ -400,8 +400,10 @@ def analyze_stage(question, stage):
     context = build_context()
 
     # Deterministic checks are independent of the model response.
+    if stage.startswith("Day 2"):
+    validation = validate_preservation(context["evidence"])
+else:
     validation = validate_transfer(context["evidence"])
-
     try:
         ai_response = generate_analysis(
             make_prompt(question, context, stage)
