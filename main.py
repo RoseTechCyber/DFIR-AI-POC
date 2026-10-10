@@ -390,42 +390,22 @@ def home():
     return page("DFIR AI Investigator", body)
 
 
-@app.get("/day2", response_class=HTMLResponse)
-def day2():
-    body = """
-<div class="card">
-  <h2>Day 2 — Identification and Preservation</h2>
-  <p>Review the evidence inventory and identify preservation checks
-     that should be completed before examination.</p>
-  <form method="post" action="/day2/analyze">
-    <label for="question"><strong>Investigator question</strong></label>
-    <textarea id="question" name="question" required>Summarize the identified evidence, its provenance, and the preservation checks still required.</textarea>
-    <button type="submit">Run Day 2 assessment</button>
-  </form>
-</div>
-"""
-    return page("Day 2 — Identification and Preservation", body)
+@app.post("/day2/analyze", response_class=HTMLResponse)
+def analyze_day2(question: str = Form(...)):
+    return analyze_stage(
+        question,
+        "Day 2 — Identification and Preservation",
+        DAY2_EVIDENCE_FILE,
+    )
 
 
-@app.get("/day3", response_class=HTMLResponse)
-def day3():
-    body = """
-<div class="card">
-  <h2>Day 3 — Timeline and Correlation</h2>
-  <p>Review the chronology and identify relationships that warrant
-     further examination without confusing correlation with proof.</p>
-  <form method="post" action="/day3/analyze">
-    <label for="question"><strong>Investigator question</strong></label>
-    <textarea id="question" name="question" required>Does the available evidence prove that Confidential.docx was copied to the USB device?</textarea>
-    <button type="submit">Run Day 3 assessment</button>
-  </form>
-</div>
-<div class="card">
-  <p><a href="/api/case/CASE-001/timeline">View timeline JSON</a></p>
-  <p><a href="/api/case/CASE-001/correlations">View correlation JSON</a></p>
-</div>
-"""
-    return page("Day 3 — Timeline and Correlation", body)
+@app.post("/day3/analyze", response_class=HTMLResponse)
+def analyze_day3(question: str = Form(...)):
+    return analyze_stage(
+        question,
+        "Day 3 — Timeline and Correlation",
+        EVIDENCE_FILE,
+    )
 
 
 # ------------------------------------------------------------
