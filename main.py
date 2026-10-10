@@ -17,6 +17,9 @@ from app.ai_provider import generate_analysis
 
 BASE_DIR = Path(__file__).resolve().parent
 
+DAY2_CASE_ID = os.getenv("DFIR_DAY2_CASE_ID", "CASE-0001")
+DAY3_CASE_ID = os.getenv("DFIR_DAY3_CASE_ID", "CASE-0002")
+
 # Day 2: Identification and Preservation Evidence Source
 DAY2_EVIDENCE_FILE = Path(
     os.getenv(
@@ -33,7 +36,6 @@ EVIDENCE_FILE = Path(
     )
 ).resolve()
 
-CASE_ID = os.getenv("DFIR_CASE_ID", "CASE-0001")
 AI_PROVIDER = os.getenv("AI_PROVIDER", "ollama").lower()
 MODEL = os.getenv(
     "GEMINI_MODEL" if AI_PROVIDER == "gemini" else "OLLAMA_MODEL",
