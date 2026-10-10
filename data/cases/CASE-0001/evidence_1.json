@@ -1,0 +1,25 @@
+[
+  {  
+    "evidence_id": "EV-0001"
+	"case_id": "CASE-0001",
+    "Time": "2026-10-07 14:31:02"
+    "Source": "Windows USB device history"
+	"Observation": "USB storage device connected."
+  },
+  {
+	"evidence_id": "EV-0002",
+	"case_id": "CASE-0001",
+    "Time": "2026-10-07 14:33:17",
+    "Source": "Windows file access log",
+	"Observation": "File "Confidential_Project_Report.docx" was accessed. "
+  },
+  {
+    "evidence_id": "EV-0003",
+	"case_id": "CASE-0001",
+    "Time": "2026-10-07 14:40:11",
+    "Source": "Windows USB device history",
+	"Observation": "USB storage device disconnected."
+  }
+{"Question": "Does this evidence prove that Confidential_Project_Report.docx was copied to the USB device"}
+  
+]
