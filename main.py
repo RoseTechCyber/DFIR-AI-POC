@@ -311,15 +311,7 @@ def build_context():
         "timeline": build_timeline(evidence),
         "correlations": build_correlations(evidence),
     }
-    if not isinstance(records, list):
-        raise ValueError("Evidence JSON must contain a list of records.")
-
-    if not all(isinstance(record, dict) for record in records):
-        raise ValueError(
-        "Every evidence record must be a JSON object."
-    )
-
-
+    
 # ------------------------------------------------------------
 # Shared navigation
 # ------------------------------------------------------------
