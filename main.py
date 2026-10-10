@@ -116,17 +116,20 @@ a { color: #17365d; }
 # Structured evidence and deterministic analysis
 # ------------------------------------------------------------
 
-def load_evidence():
-    if not EVIDENCE_FILE.is_file():
+def load_evidence(evidence_file: Path):
+    if not evidence_file.is_file():
         raise FileNotFoundError(
-            f"Evidence file is missing: {EVIDENCE_FILE}"
+            f"Evidence file is missing: {evidence_file}"
         )
 
-    with EVIDENCE_FILE.open("r", encoding="utf-8") as stream:
+    with evidence_file.open("r", encoding="utf-8") as stream:
         records = json.load(stream)
 
     if not isinstance(records, list):
         raise ValueError("Evidence JSON must contain a list of records.")
+
+    if not all(isinstance(record, dict) for record in records):
+        raise ValueError("Every evidence record must be a JSON object.")
 
     records = [
         record for record in records
@@ -140,6 +143,16 @@ def load_evidence():
 
     return records
 
+
+def build_context(evidence_file: Path = EVIDENCE_FILE):
+    evidence = load_evidence(evidence_file)
+
+    return {
+        "case_id": CASE_ID,
+        "evidence": evidence,
+        "timeline": build_timeline(evidence),
+        "correlations": build_correlations(evidence),
+    }
 
 def parse_timestamp(value):
     if not value:
