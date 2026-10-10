@@ -11,7 +11,7 @@
 	"case_id": "CASE-0001",
     "Time": "2026-10-07 14:33:17",
     "Source": "Windows file access log",
-	"Observation": "File "Confidential_Project_Report.docx"  was accessed."
+	"Observation": "File Confidential_Project_Report.docx  was accessed."
   },
   {
     "evidence_id": "EV-0003",
