@@ -1,3 +1,4 @@
+
 import html
 import json
 import logging
@@ -11,35 +12,50 @@ from fastapi.responses import HTMLResponse
 from app.ai_provider import generate_analysis
 
 
-# ------------------------------------------------------------
-# Configuration
-# ------------------------------------------------------------
+# ============================================================
+# 1. CONFIGURATION
+# ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent
 
 DAY2_CASE_ID = os.getenv("DFIR_DAY2_CASE_ID", "CASE-0001")
 DAY3_CASE_ID = os.getenv("DFIR_DAY3_CASE_ID", "CASE-0002")
 
-# Day 2: Identification and Preservation Evidence Source
+# Day 2: Identification and Preservation
 DAY2_EVIDENCE_FILE = Path(
     os.getenv(
         "DFIR_DAY2_EVIDENCE_FILE",
-        str(BASE_DIR / "data" / "cases" / "CASE-0001" / "evidence_1.json"),
+        str(
+            BASE_DIR
+            / "data"
+            / "cases"
+            / "CASE-0001"
+            / "evidence_1.json"
+        ),
     )
 ).resolve()
 
-# Day 3: Timeline and correlation Evidence Source
-EVIDENCE_FILE = Path(
+# Day 3: Timeline and Correlation
+DAY3_EVIDENCE_FILE = Path(
     os.getenv(
-        "DFIR_EVIDENCE_FILE",
-        str(BASE_DIR / "data" / "cases" / "CASE-0002" / "evidence_2.json"),
+        "DFIR_DAY3_EVIDENCE_FILE",
+        str(
+            BASE_DIR
+            / "data"
+            / "cases"
+            / "CASE-0002"
+            / "evidence_2.json"
+        ),
     )
 ).resolve()
 
 AI_PROVIDER = os.getenv("AI_PROVIDER", "ollama").lower()
+
 MODEL = os.getenv(
     "GEMINI_MODEL" if AI_PROVIDER == "gemini" else "OLLAMA_MODEL",
-    "gemini-3.8-flash" if AI_PROVIDER == "gemini" else "qwen2.5:0.5b",
+    "gemini-3.8-flash"
+    if AI_PROVIDER == "gemini"
+    else "qwen2.5:0.5b",
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -48,8 +64,13 @@ logger = logging.getLogger("dfir")
 app = FastAPI(
     title="DFIR AI Investigator",
     description="Synthetic digital-forensics investigation demonstration",
-    version="1.0.0",
+    version="1.1.0",
 )
+
+
+# ============================================================
+# 2. HTML STYLING
+# ============================================================
 
 STYLE = """
 <style>
@@ -108,18 +129,27 @@ pre {
     padding: 16px;
     border-radius: 8px;
 }
-a { color: #17365d; }
-.muted { color: #555; font-size: 14px; }
+a {
+    color: #17365d;
+}
+.muted {
+    color: #555;
+    font-size: 14px;
+}
 </style>
 """
 
 
-# ------------------------------------------------------------
-# Structured evidence and deterministic analysis
-# ------------------------------------------------------------
-
+# ============================================================
+# 3. EVIDENCE LOADING
+# ============================================================
 
 def load_evidence(evidence_file: Path, case_id: str):
+    """
+    Load evidence from the specified file and retain only records
+    belonging to the specified case.
+    """
+
     if not evidence_file.is_file():
         raise FileNotFoundError(
             f"Evidence file is missing: {evidence_file}"
@@ -129,52 +159,53 @@ def load_evidence(evidence_file: Path, case_id: str):
         records = json.load(stream)
 
     if not isinstance(records, list):
-        raise ValueError("Evidence JSON must contain a list of records.")
+        raise ValueError(
+            "Evidence JSON must contain a list of records."
+        )
 
     if not all(isinstance(record, dict) for record in records):
-        raise ValueError("Every evidence record must be a JSON object.")
+        raise ValueError(
+            "Every evidence record must be a JSON object."
+        )
 
     records = [
-        record for record in records
+        record
+        for record in records
         if record.get("case_id") == case_id
     ]
 
+    # An empty result usually indicates a case ID mismatch.
+    if not records:
+        raise ValueError(
+            f"No evidence records found for case {case_id} "
+            f"in {evidence_file}. Check the case_id values "
+            "inside the JSON file."
+        )
+
     ids = [record.get("evidence_id") for record in records]
 
-    if any(not item for item in ids) or len(ids) != len(set(ids)):
-        raise ValueError("Evidence IDs are missing or duplicated.")
+    if any(not item for item in ids):
+        raise ValueError(
+            f"Evidence IDs are missing for case {case_id}."
+        )
+
+    if len(ids) != len(set(ids)):
+        raise ValueError(
+            f"Duplicate evidence IDs found for case {case_id}."
+        )
 
     return records
 
 
-def build_context(evidence_file: Path, case_id: str):
-    evidence = load_evidence(evidence_file, case_id)
-
-    return {
-        "case_id": case_id,
-        "evidence": evidence,
-        "timeline": build_timeline(evidence),
-        "correlations": build_correlations(evidence),
-    }
-
-def build_context(evidence_file: Path = EVIDENCE_FILE):
-    evidence = load_evidence(evidence_file)
-
-    return {
-        "case_id": CASE_ID,
-        "evidence": evidence,
-        "timeline": build_timeline(evidence),
-        "correlations": build_correlations(evidence),
-    }
+# ============================================================
+# 4. TIMESTAMP PARSING AND TIMELINE
+# ============================================================
 
 def parse_timestamp(value):
-    if not value:
+    if not value or not isinstance(value, str):
         return None
 
     try:
-        if not isinstance(value, str):
-            return None
-
         normalized = (
             value[:-1] + "+00:00"
             if value.endswith("Z")
@@ -183,8 +214,7 @@ def parse_timestamp(value):
 
         timestamp = datetime.fromisoformat(normalized)
 
-        # Treat naive timestamps as UTC only if that matches
-        # the documented timestamp convention for this dataset.
+        # Do not guess the timezone of naive timestamps.
         if timestamp.tzinfo is None:
             return None
 
@@ -195,7 +225,8 @@ def parse_timestamp(value):
 
 
 def build_timeline(evidence):
-    # Put records with missing or invalid timestamps last.
+    """Sort valid timestamps chronologically; put invalid ones last."""
+
     return sorted(
         evidence,
         key=lambda record: (
@@ -206,20 +237,30 @@ def build_timeline(evidence):
     )
 
 
+# ============================================================
+# 5. TEMPORAL CORRELATION
+# ============================================================
+
 def build_correlations(evidence):
     usb_events = [
-        item for item in evidence
+        item
+        for item in evidence
         if item.get("artifact_type") == "usb_connection"
     ]
+
     file_events = [
-        item for item in evidence
+        item
+        for item in evidence
         if item.get("artifact_type") == "file_access"
     ]
 
     correlations = []
 
     for file_event in file_events:
-        file_time = parse_timestamp(file_event.get("timestamp"))
+        file_time = parse_timestamp(
+            file_event.get("timestamp")
+        )
+
         if file_time is None:
             continue
 
@@ -227,11 +268,13 @@ def build_correlations(evidence):
             if usb_event.get("action") != "connected":
                 continue
 
-            usb_time = parse_timestamp(usb_event.get("timestamp"))
+            usb_time = parse_timestamp(
+                usb_event.get("timestamp")
+            )
+
             if usb_time is None or usb_time > file_time:
                 continue
 
-            # Select the earliest recorded disconnect after this connection.
             disconnect_times = [
                 parse_timestamp(item.get("timestamp"))
                 for item in usb_events
@@ -241,49 +284,93 @@ def build_correlations(evidence):
                 and parse_timestamp(item.get("timestamp")) >= usb_time
             ]
 
-            disconnect_times = sorted(disconnect_times)
+            disconnect_times.sort()
+
             still_connected = (
-                not disconnect_times or file_time <= disconnect_times[0]
+                not disconnect_times
+                or file_time <= disconnect_times[0]
             )
 
-            correlations.append({
-                "type": "temporal",
-                "relationship": "USB connected before file access",
-                "usb_evidence_id": usb_event.get("evidence_id"),
-                "file_evidence_id": file_event.get("evidence_id"),
-                "usb_device": usb_event.get("object"),
-                "file": file_event.get("object"),
-                "file_access_while_connected": still_connected,
-            })
+            correlations.append(
+                {
+                    "type": "temporal",
+                    "relationship": (
+                        "USB connected before file access"
+                    ),
+                    "usb_evidence_id": usb_event.get("evidence_id"),
+                    "file_evidence_id": file_event.get("evidence_id"),
+                    "usb_device": usb_event.get("object"),
+                    "file": file_event.get("object"),
+                    "file_access_while_connected": still_connected,
+                }
+            )
 
     return correlations
 
 
+# ============================================================
+# 6. DETERMINISTIC VALIDATION
+# ============================================================
+
+def validate_preservation(evidence):
+    missing_provenance = [
+        item.get("evidence_id", "unknown")
+        for item in evidence
+        if not item.get("source_reference")
+        or not item.get("provenance")
+    ]
+
+    return {
+        "finding": "PRESERVATION REVIEW REQUIRED",
+        "confidence": "Requires examiner verification",
+        "missing_provenance_ids": missing_provenance,
+        "assessment": (
+            f"{len(evidence)} evidence records were reviewed. "
+            "Source references and provenance were checked for "
+            "completeness. Preservation is not confirmed merely "
+            "because those fields exist; verify acquisition records, "
+            "cryptographic hashes, and chain of custody independently."
+        ),
+    }
+
+
 def validate_transfer(evidence):
-    """Conservative indicator check; not proof of a file transfer."""
+    """Identify transfer indicators without treating them as proof."""
 
     transfer_types = {
-        "file_copy", "file_transfer", "usb_write", "destination_file"
+        "file_copy",
+        "file_transfer",
+        "usb_write",
+        "destination_file",
     }
+
     transfer_actions = {
-        "copied", "file_copied", "transferred", "written_to_usb"
+        "copied",
+        "file_copied",
+        "transferred",
+        "written_to_usb",
     }
 
     indicators = [
         item.get("evidence_id")
         for item in evidence
-        if str(item.get("artifact_type", "")).lower() in transfer_types
-        or str(item.get("action", "")).lower() in transfer_actions
+        if str(item.get("artifact_type", "")).lower()
+        in transfer_types
+        or str(item.get("action", "")).lower()
+        in transfer_actions
     ]
 
     if indicators:
         return {
-            "finding": "TRANSFER INDICATOR DETECTED — REVIEW REQUIRED",
+            "finding": (
+                "TRANSFER INDICATOR DETECTED — REVIEW REQUIRED"
+            ),
             "confidence": "Requires investigator review",
             "indicator_ids": indicators,
             "assessment": (
-                "Transfer-related indicators exist, but their relationship "
-                "to the specific file and destination device must be verified."
+                "Transfer-related indicators exist, but their "
+                "relationship to the specific file and destination "
+                "device must be verified."
             ),
         }
 
@@ -292,12 +379,72 @@ def validate_transfer(evidence):
         "confidence": "Low to medium",
         "indicator_ids": [],
         "assessment": (
-            "The supplied records may establish a temporal relationship "
-            "between USB connection and file access. They do not establish "
-            "that the file was copied to the USB device."
+            "The supplied records may establish a temporal "
+            "relationship between USB connection and file access. "
+            "They do not establish that the file was copied "
+            "to the USB device."
         ),
     }
 
+
+# ============================================================
+# 7. CASE CONTEXT
+# ============================================================
+
+def build_context(evidence_file: Path, case_id: str):
+    """
+    Build context for one specific case and evidence file.
+    There is deliberately only ONE build_context function.
+    """
+
+    evidence = load_evidence(evidence_file, case_id)
+
+    return {
+        "case_id": case_id,
+        "evidence": evidence,
+        "timeline": build_timeline(evidence),
+        "correlations": build_correlations(evidence),
+    }
+
+
+CASE_FILES = {
+    DAY2_CASE_ID: DAY2_EVIDENCE_FILE,
+    DAY3_CASE_ID: DAY3_EVIDENCE_FILE,
+}
+
+
+def build_case_context(case_id: str):
+    """Resolve a case ID to its configured evidence file."""
+
+    evidence_file = CASE_FILES.get(case_id)
+
+    if evidence_file is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Case not found.",
+        )
+
+    try:
+        return build_context(evidence_file, case_id)
+
+    except FileNotFoundError as exc:
+        logger.exception("Evidence file not found.")
+        raise HTTPException(
+            status_code=500,
+            detail=str(exc),
+        )
+
+    except (ValueError, json.JSONDecodeError) as exc:
+        logger.exception("Invalid case evidence.")
+        raise HTTPException(
+            status_code=500,
+            detail=str(exc),
+        )
+
+
+# ============================================================
+# 8. AI PROMPT
+# ============================================================
 
 def make_prompt(question, context, stage):
     return f"""
@@ -338,18 +485,9 @@ RECOMMENDED NEXT STEP:
 """
 
 
-def build_context():
-    evidence = load_evidence()
-    return {
-        "case_id": CASE_ID,
-        "evidence": evidence,
-        "timeline": build_timeline(evidence),
-        "correlations": build_correlations(evidence),
-    }
-   
-# ------------------------------------------------------------
-# Shared navigation
-# ------------------------------------------------------------
+# ============================================================
+# 9. SHARED HTML NAVIGATION
+# ============================================================
 
 def page(title, body):
     return f"""<!doctype html>
@@ -363,8 +501,11 @@ def page(title, body):
 <body>
 <div class="card">
   <h1>DFIR AI Investigator</h1>
-  <p><a href="/">Home</a> | <a href="/day2">Day 2</a> |
-     <a href="/day3">Day 3</a></p>
+  <p>
+    <a href="/">Home</a> |
+    <a href="/day2">Day 2</a> |
+    <a href="/day3">Day 3</a>
+  </p>
   <p class="muted">Synthetic demonstration evidence only</p>
 </div>
 {body}
@@ -372,63 +513,123 @@ def page(title, body):
 </html>"""
 
 
+# ============================================================
+# 10. HOME PAGE
+# ============================================================
+
 @app.get("/", response_class=HTMLResponse)
 def home():
     body = """
 <div class="card info">
   <h2>Digital Forensics Investigation Laboratory</h2>
-  <p>Explore the forensic workflow through two connected modules.
-     The AI output is preliminary and does not replace examiner review.</p>
+  <p>
+    Explore the forensic workflow through two investigation modules.
+    AI output is preliminary and does not replace examiner review.
+  </p>
 </div>
+
 <div class="grid">
   <div class="card">
     <h2>Day 2 — Identification and Preservation</h2>
-    <p>Review available evidence, provenance, preservation considerations,
-       and outstanding integrity checks.</p>
+    <p>
+      Review the evidence inventory, provenance, preservation
+      considerations, and outstanding integrity checks.
+    </p>
     <a class="button" href="/day2">Start Day 2</a>
   </div>
+
   <div class="card">
     <h2>Day 3 — Timeline and Correlation</h2>
-    <p>Examine event chronology, temporal relationships, and limitations
-       of the available evidence.</p>
+    <p>
+      Examine event chronology, temporal relationships, and
+      limitations of the available evidence.
+    </p>
     <a class="button" href="/day3">Start Day 3</a>
   </div>
 </div>
+
 <div class="card warning">
   <strong>Demonstration notice:</strong>
-  This public version is intended for synthetic evidence. Do not submit
-  real investigative evidence or personal data.
+  This application is intended for synthetic evidence.
+  Do not submit real investigative evidence or personal data.
 </div>
 """
     return page("DFIR AI Investigator", body)
 
 
+# ============================================================
+# 11. DAY 2 PAGE
+# ============================================================
 
-@app.post("/day2/analyze", response_class=HTMLResponse)
-def analyze_day2(question: str = Form(...)):
-    return analyze_stage(
-        question,
-        "Day 2 — Identification and Preservation",
-        DAY2_EVIDENCE_FILE,
-        DAY2_CASE_ID,
-    )
+@app.get("/day2", response_class=HTMLResponse)
+def day2():
+    body = """
+<div class="card">
+  <h2>Day 2 — Identification and Preservation</h2>
+  <p>
+    Review the evidence inventory and identify preservation checks
+    that should be completed before examination.
+  </p>
+
+  <form method="post" action="/day2/analyze">
+    <label for="question">
+      <strong>Investigator question</strong>
+    </label>
+
+    <textarea id="question" name="question" required>Summarize the identified evidence, its provenance, and the preservation checks still required.</textarea>
+
+    <button type="submit">Run Day 2 assessment</button>
+  </form>
+</div>
+"""
+    return page("Day 2 — Identification and Preservation", body)
 
 
-@app.post("/day3/analyze", response_class=HTMLResponse)
-def analyze_day3(question: str = Form(...)):
-    return analyze_stage(
-        question,
-        "Day 3 — Timeline and Correlation",
-        DAY3_EVIDENCE_FILE,
-        DAY3_CASE_ID,
-    )
+# ============================================================
+# 12. DAY 3 PAGE
+# ============================================================
+
+@app.get("/day3", response_class=HTMLResponse)
+def day3():
+    body = """
+<div class="card">
+  <h2>Day 3 — Timeline and Correlation</h2>
+  <p>
+    Review the chronology and identify relationships that warrant
+    further examination without confusing correlation with proof.
+  </p>
+
+  <form method="post" action="/day3/analyze">
+    <label for="question">
+      <strong>Investigator question</strong>
+    </label>
+
+    <textarea id="question" name="question" required>Does the available evidence prove that Confidential.docx was copied to the USB device?</textarea>
+
+    <button type="submit">Run Day 3 assessment</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Day 3 case APIs</h3>
+  <p>
+    <a href="/api/case/CASE-0002/timeline">
+      View timeline JSON
+    </a>
+  </p>
+  <p>
+    <a href="/api/case/CASE-0002/correlations">
+      View correlation JSON
+    </a>
+  </p>
+</div>
+"""
+    return page("Day 3 — Timeline and Correlation", body)
 
 
-# ------------------------------------------------------------
-# Analysis endpoints
-# ------------------------------------------------------------
-
-
+# ============================================================
+# 13. SHARED ANALYSIS FUNCTION
+# ============================================================
 
 def analyze_stage(
     question: str,
@@ -436,11 +637,17 @@ def analyze_stage(
     evidence_file: Path,
     case_id: str,
 ):
+    # Load the selected case only.
     try:
         context = build_context(evidence_file, case_id)
+
     except FileNotFoundError as exc:
         logger.exception("Evidence file not found.")
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(
+            status_code=500,
+            detail=str(exc),
+        )
+
     except (ValueError, json.JSONDecodeError) as exc:
         logger.exception("Evidence file is invalid.")
         raise HTTPException(
@@ -448,16 +655,18 @@ def analyze_stage(
             detail=f"Invalid evidence data: {exc}",
         )
 
+    # Run deterministic validation.
     if stage.startswith("Day 2"):
         validation = validate_preservation(context["evidence"])
     else:
         validation = validate_transfer(context["evidence"])
 
-    # Generate the preliminary AI assessment.
+    # Generate AI assessment using the selected case context.
     try:
         ai_response = generate_analysis(
             make_prompt(question, context, stage)
         )
+
     except Exception:
         logger.exception("AI provider request failed.")
         raise HTTPException(
@@ -468,18 +677,7 @@ def analyze_stage(
             ),
         )
 
-    result = {
-        "stage": stage,
-        "case_id": context["case_id"],
-        "question": question,
-        "evidence_count": len(context["evidence"]),
-        "validation": validation,
-        "ai_assessment": ai_response,
-        "timeline": context["timeline"],
-        "correlations": context["correlations"],
-    }
-
-    # Escape all untrusted content before inserting it into HTML.
+    # Escape untrusted values before rendering HTML.
     stage_html = html.escape(stage)
     question_html = html.escape(question)
     case_id_html = html.escape(context["case_id"])
@@ -491,6 +689,7 @@ def analyze_stage(
     timeline_html = html.escape(
         json.dumps(context["timeline"], indent=2, default=str)
     )
+
     correlations_html = html.escape(
         json.dumps(context["correlations"], indent=2, default=str)
     )
@@ -500,69 +699,66 @@ def analyze_stage(
     )
 
     body = f"""
-    <div class="card">
-      <h2>{stage_html}</h2>
-      <p><strong>Question:</strong> {question_html}</p>
-      <p><strong>Case:</strong> {case_id_html}</p>
-      <p><strong>Evidence records:</strong>
-         {len(context["evidence"])}</p>
+<div class="card">
+  <h2>{stage_html}</h2>
 
-      <div class="warning">
-        <strong>Deterministic assessment:</strong>
-        {finding_html}
-        <p>{assessment_html}</p>
-        <p>Confidence: {confidence_html}</p>
-      </div>
+  <p><strong>Question:</strong> {question_html}</p>
+  <p><strong>Case:</strong> {case_id_html}</p>
+  <p>
+    <strong>Evidence records:</strong>
+    {len(context["evidence"])}
+  </p>
 
-      <h3>AI preliminary assessment</h3>
-      <pre>{ai_html}</pre>
+  <div class="warning">
+    <strong>Deterministic assessment:</strong>
+    {finding_html}
+    <p>{assessment_html}</p>
+    <p>Confidence: {confidence_html}</p>
+  </div>
 
-      <h3>Timeline</h3>
-      <pre>{timeline_html}</pre>
+  <h3>AI preliminary assessment</h3>
+  <pre>{ai_html}</pre>
 
-      <h3>Correlations</h3>
-      <pre>{correlations_html}</pre>
+  <h3>Timeline</h3>
+  <pre>{timeline_html}</pre>
 
-      <p><a href="{return_url}">Run another assessment</a></p>
-    </div>
-    """
+  <h3>Correlations</h3>
+  <pre>{correlations_html}</pre>
+
+  <p><a href="{return_url}">Run another assessment</a></p>
+</div>
+"""
 
     return page("Analysis result", body)
 
+
+# ============================================================
+# 14. DAY 2 AND DAY 3 ANALYSIS ENDPOINTS
+# ============================================================
+
 @app.post("/day2/analyze", response_class=HTMLResponse)
 def analyze_day2(question: str = Form(...)):
-    return analyze_stage(question, "Day 2 — Identification and Preservation")
+    return analyze_stage(
+        question=question,
+        stage="Day 2 — Identification and Preservation",
+        evidence_file=DAY2_EVIDENCE_FILE,
+        case_id=DAY2_CASE_ID,
+    )
 
 
 @app.post("/day3/analyze", response_class=HTMLResponse)
 def analyze_day3(question: str = Form(...)):
-    return analyze_stage(question, "Day 3 — Timeline and Correlation")
+    return analyze_stage(
+        question=question,
+        stage="Day 3 — Timeline and Correlation",
+        evidence_file=DAY3_EVIDENCE_FILE,
+        case_id=DAY3_CASE_ID,
+    )
 
 
-CASE_FILES = {
-    DAY2_CASE_ID: DAY2_EVIDENCE_FILE,
-    DAY3_CASE_ID: DAY3_EVIDENCE_FILE,
-}
-
-
-def build_case_context(case_id: str):
-    evidence_file = CASE_FILES.get(case_id)
-
-    if evidence_file is None:
-        raise HTTPException(status_code=404, detail="Case not found.")
-
-    try:
-        return build_context(evidence_file, case_id)
-    except FileNotFoundError as exc:
-        logger.exception("Evidence file not found.")
-        raise HTTPException(status_code=500, detail=str(exc))
-    except (ValueError, json.JSONDecodeError) as exc:
-        logger.exception("Invalid case evidence.")
-        raise HTTPException(status_code=500, detail=str(exc))
-# ------------------------------------------------------------
-# JSON endpoints and health
-# ------------------------------------------------------------
-
+# ============================================================
+# 15. TIMELINE JSON API
+# ============================================================
 
 @app.get("/api/case/{case_id}/timeline")
 def case_timeline(case_id: str):
@@ -575,6 +771,10 @@ def case_timeline(case_id: str):
     }
 
 
+# ============================================================
+# 16. CORRELATION JSON API
+# ============================================================
+
 @app.get("/api/case/{case_id}/correlations")
 def case_correlations(case_id: str):
     context = build_case_context(case_id)
@@ -586,35 +786,22 @@ def case_correlations(case_id: str):
     }
 
 
+# ============================================================
+# 17. HEALTH CHECK
+# ============================================================
+
 @app.get("/health")
 def health():
-    # This is a liveness check, not a claim that the AI provider is reachable.
     return {
         "status": "ok",
         "application": "DFIR AI Investigator",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "provider": AI_PROVIDER,
         "model": MODEL,
-        "case_id": CASE_ID,
-        "evidence_file_exists": EVIDENCE_FILE.is_file(),
-    }
-
-def validate_preservation(evidence):
-    missing_provenance = [
-        item.get("evidence_id", "unknown")
-        for item in evidence
-        if not item.get("source_reference") or not item.get("provenance")
-    ]
-
-    return {
-        "finding": "PRESERVATION REVIEW REQUIRED",
-        "confidence": "Requires examiner verification",
-        "missing_provenance_ids": missing_provenance,
-        "assessment": (
-            f"{len(evidence)} evidence records were reviewed. "
-            "Source references and provenance were checked for completeness. "
-            "Preservation is not confirmed merely because those fields exist; "
-            "verify acquisition records, cryptographic hashes, and chain of "
-            "custody independently."
-        ),
+        "day2_case_id": DAY2_CASE_ID,
+        "day2_evidence_file": str(DAY2_EVIDENCE_FILE),
+        "day2_evidence_file_exists": DAY2_EVIDENCE_FILE.is_file(),
+        "day3_case_id": DAY3_CASE_ID,
+        "day3_evidence_file": str(DAY3_EVIDENCE_FILE),
+        "day3_evidence_file_exists": DAY3_EVIDENCE_FILE.is_file(),
     }
