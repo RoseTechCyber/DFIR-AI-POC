@@ -35,6 +35,10 @@ EVIDENCE_FILE = Path(
         str(BASE_DIR / "data" / "cases" / "CASE-0002" / "evidence_2.json"),
     )
 ).resolve()
+CASE_FILES = {
+    DAY2_CASE_ID: DAY2_EVIDENCE_FILE,
+    DAY3_CASE_ID: DAY3_EVIDENCE_FILE,
+}
 
 AI_PROVIDER = os.getenv("AI_PROVIDER", "ollama").lower()
 MODEL = os.getenv(
