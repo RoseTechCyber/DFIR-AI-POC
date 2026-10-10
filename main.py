@@ -35,10 +35,6 @@ EVIDENCE_FILE = Path(
         str(BASE_DIR / "data" / "cases" / "CASE-0002" / "evidence_2.json"),
     )
 ).resolve()
-CASE_FILES = {
-    DAY2_CASE_ID: DAY2_EVIDENCE_FILE,
-    DAY3_CASE_ID: DAY3_EVIDENCE_FILE,
-}
 
 AI_PROVIDER = os.getenv("AI_PROVIDER", "ollama").lower()
 MODEL = os.getenv(
@@ -543,6 +539,26 @@ def analyze_day3(question: str = Form(...)):
     return analyze_stage(question, "Day 3 — Timeline and Correlation")
 
 
+CASE_FILES = {
+    DAY2_CASE_ID: DAY2_EVIDENCE_FILE,
+    DAY3_CASE_ID: DAY3_EVIDENCE_FILE,
+}
+
+
+def build_case_context(case_id: str):
+    evidence_file = CASE_FILES.get(case_id)
+
+    if evidence_file is None:
+        raise HTTPException(status_code=404, detail="Case not found.")
+
+    try:
+        return build_context(evidence_file, case_id)
+    except FileNotFoundError as exc:
+        logger.exception("Evidence file not found.")
+        raise HTTPException(status_code=500, detail=str(exc))
+    except (ValueError, json.JSONDecodeError) as exc:
+        logger.exception("Invalid case evidence.")
+        raise HTTPException(status_code=500, detail=str(exc))
 # ------------------------------------------------------------
 # JSON endpoints and health
 # ------------------------------------------------------------
