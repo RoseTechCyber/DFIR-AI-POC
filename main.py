@@ -433,16 +433,30 @@ def day3():
 # ------------------------------------------------------------
 
 
-def analyze_stage(question: str, stage: str):
-    # Use the function that actually exists in this file.
-    context = build_context()
+def analyze_stage(
+    question: str,
+    stage: str,
+    evidence_file: Path,
+):
+    try:
+        context = build_context(evidence_file)
+    except FileNotFoundError as exc:
+        logger.exception("Evidence file not found.")
+        raise HTTPException(status_code=500, detail=str(exc))
+    except (ValueError, json.JSONDecodeError) as exc:
+        logger.exception("Evidence file is invalid.")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid evidence data: {exc}",
+        )
 
-    # Perform deterministic validation first.
     if stage.startswith("Day 2"):
         validation = validate_preservation(context["evidence"])
     else:
         validation = validate_transfer(context["evidence"])
 
+    # Keep the remainder of your existing function unchanged,
+    # starting with the AI analysis call.
     # Generate the preliminary AI assessment.
     try:
         ai_response = generate_analysis(
