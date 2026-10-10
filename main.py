@@ -403,12 +403,14 @@ def home():
     return page("DFIR AI Investigator", body)
 
 
+
 @app.post("/day2/analyze", response_class=HTMLResponse)
 def analyze_day2(question: str = Form(...)):
     return analyze_stage(
         question,
         "Day 2 — Identification and Preservation",
         DAY2_EVIDENCE_FILE,
+        DAY2_CASE_ID,
     )
 
 
@@ -417,7 +419,8 @@ def analyze_day3(question: str = Form(...)):
     return analyze_stage(
         question,
         "Day 3 — Timeline and Correlation",
-        EVIDENCE_FILE,
+        DAY3_EVIDENCE_FILE,
+        DAY3_CASE_ID,
     )
 
 
@@ -426,13 +429,15 @@ def analyze_day3(question: str = Form(...)):
 # ------------------------------------------------------------
 
 
+
 def analyze_stage(
     question: str,
     stage: str,
     evidence_file: Path,
+    case_id: str,
 ):
     try:
-        context = build_context(evidence_file)
+        context = build_context(evidence_file, case_id)
     except FileNotFoundError as exc:
         logger.exception("Evidence file not found.")
         raise HTTPException(status_code=500, detail=str(exc))
@@ -448,8 +453,6 @@ def analyze_stage(
     else:
         validation = validate_transfer(context["evidence"])
 
-    # Keep the remainder of your existing function unchanged,
-    # starting with the AI analysis call.
     # Generate the preliminary AI assessment.
     try:
         ai_response = generate_analysis(
