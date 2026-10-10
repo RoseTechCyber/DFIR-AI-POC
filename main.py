@@ -33,7 +33,7 @@ EVIDENCE_FILE = Path(
     )
 ).resolve()
 
-CASE_ID = os.getenv("DFIR_CASE_ID", "CASE-0001", "CASE-0002")
+CASE_ID = os.getenv("DFIR_CASE_ID", "CASE-0001")
 AI_PROVIDER = os.getenv("AI_PROVIDER", "ollama").lower()
 MODEL = os.getenv(
     "GEMINI_MODEL" if AI_PROVIDER == "gemini" else "OLLAMA_MODEL",
