@@ -563,11 +563,11 @@ def build_case_context(case_id: str):
 # JSON endpoints and health
 # ------------------------------------------------------------
 
+
 @app.get("/api/case/{case_id}/timeline")
 def case_timeline(case_id: str):
-    context = build_context()
-    if case_id != context["case_id"]:
-        raise HTTPException(404, "Case not found.")
+    context = build_case_context(case_id)
+
     return {
         "case_id": case_id,
         "event_count": len(context["timeline"]),
@@ -577,9 +577,8 @@ def case_timeline(case_id: str):
 
 @app.get("/api/case/{case_id}/correlations")
 def case_correlations(case_id: str):
-    context = build_context()
-    if case_id != context["case_id"]:
-        raise HTTPException(404, "Case not found.")
+    context = build_case_context(case_id)
+
     return {
         "case_id": case_id,
         "correlation_count": len(context["correlations"]),
