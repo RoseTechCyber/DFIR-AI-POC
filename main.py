@@ -118,7 +118,8 @@ a { color: #17365d; }
 # Structured evidence and deterministic analysis
 # ------------------------------------------------------------
 
-def load_evidence(evidence_file: Path):
+
+def load_evidence(evidence_file: Path, case_id: str):
     if not evidence_file.is_file():
         raise FileNotFoundError(
             f"Evidence file is missing: {evidence_file}"
@@ -135,7 +136,7 @@ def load_evidence(evidence_file: Path):
 
     records = [
         record for record in records
-        if record.get("case_id") == CASE_ID
+        if record.get("case_id") == case_id
     ]
 
     ids = [record.get("evidence_id") for record in records]
@@ -145,6 +146,16 @@ def load_evidence(evidence_file: Path):
 
     return records
 
+
+def build_context(evidence_file: Path, case_id: str):
+    evidence = load_evidence(evidence_file, case_id)
+
+    return {
+        "case_id": case_id,
+        "evidence": evidence,
+        "timeline": build_timeline(evidence),
+        "correlations": build_correlations(evidence),
+    }
 
 def build_context(evidence_file: Path = EVIDENCE_FILE):
     evidence = load_evidence(evidence_file)
