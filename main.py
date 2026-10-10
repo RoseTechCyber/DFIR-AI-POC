@@ -137,17 +137,36 @@ def parse_timestamp(value):
         return None
 
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if not isinstance(value, str):
+            return None
+
+        normalized = (
+            value[:-1] + "+00:00"
+            if value.endswith("Z")
+            else value
+        )
+
+        timestamp = datetime.fromisoformat(normalized)
+
+        # Treat naive timestamps as UTC only if that matches
+        # the documented timestamp convention for this dataset.
+        if timestamp.tzinfo is None:
+            return None
+
+        return timestamp.astimezone(timezone.utc)
+
     except (TypeError, ValueError):
         return None
 
 
 def build_timeline(evidence):
+    # Put records with missing or invalid timestamps last.
     return sorted(
         evidence,
         key=lambda record: (
+            parse_timestamp(record.get("timestamp")) is None,
             parse_timestamp(record.get("timestamp"))
-            or datetime.max.replace(tzinfo=timezone.utc)
+            or datetime.max.replace(tzinfo=timezone.utc),
         ),
     )
 
@@ -292,6 +311,13 @@ def build_context():
         "timeline": build_timeline(evidence),
         "correlations": build_correlations(evidence),
     }
+    if not isinstance(records, list):
+        raise ValueError("Evidence JSON must contain a list of records.")
+
+    if not all(isinstance(record, dict) for record in records):
+        raise ValueError(
+        "Every evidence record must be a JSON object."
+    )
 
 
 # ------------------------------------------------------------
@@ -392,17 +418,18 @@ def day3():
 # Analysis endpoints
 # ------------------------------------------------------------
 
-def analyze_stage(question, stage):
-    context = build_analysis_context()
 
-    # Keep your existing AI analysis call here, if present.
+def analyze_stage(question: str, stage: str):
+    # Use the function that actually exists in this file.
+    context = build_context()
 
+    # Perform deterministic validation first.
     if stage.startswith("Day 2"):
         validation = validate_preservation(context["evidence"])
     else:
         validation = validate_transfer(context["evidence"])
 
-    # Keep the remaining existing code here.
+    # Generate the preliminary AI assessment.
     try:
         ai_response = generate_analysis(
             make_prompt(question, context, stage)
@@ -411,7 +438,10 @@ def analyze_stage(question, stage):
         logger.exception("AI provider request failed.")
         raise HTTPException(
             status_code=503,
-            detail="AI analysis is unavailable. Check provider configuration.",
+            detail=(
+                "AI analysis is unavailable. "
+                "Check provider configuration."
+            ),
         )
 
     result = {
@@ -425,29 +455,55 @@ def analyze_stage(question, stage):
         "correlations": context["correlations"],
     }
 
-    body = f"""
-<div class="card">
-  <h2>{html.escape(stage)}</h2>
-  <p><strong>Question:</strong> {html.escape(question)}</p>
-  <p><strong>Case:</strong> {html.escape(context["case_id"])}</p>
-  <p><strong>Evidence records:</strong> {len(context["evidence"])}</p>
-  <div class="warning">
-    <strong>Deterministic assessment:</strong>
-    {html.escape(validation["finding"])}
-    <p>{html.escape(validation["assessment"])}</p>
-    <p>Confidence: {html.escape(validation["confidence"])}</p>
-  </div>
-  <h3>AI preliminary assessment</h3>
-  <pre>{html.escape(ai_response)}</pre>
-  <h3>Timeline</h3>
-  <pre>{html.escape(json.dumps(context["timeline"], indent=2))}</pre>
-  <h3>Correlations</h3>
-  <pre>{html.escape(json.dumps(context["correlations"], indent=2))}</pre>
-  <p><a href="/{ "day2" if stage.startswith("Day 2") else "day3" }">Run another assessment</a></p>
-</div>
-"""
-    return page("Analysis result", body)
+    # Escape all untrusted content before inserting it into HTML.
+    stage_html = html.escape(stage)
+    question_html = html.escape(question)
+    case_id_html = html.escape(context["case_id"])
+    finding_html = html.escape(validation["finding"])
+    assessment_html = html.escape(validation["assessment"])
+    confidence_html = html.escape(validation["confidence"])
+    ai_html = html.escape(str(ai_response))
 
+    timeline_html = html.escape(
+        json.dumps(context["timeline"], indent=2, default=str)
+    )
+    correlations_html = html.escape(
+        json.dumps(context["correlations"], indent=2, default=str)
+    )
+
+    return_url = (
+        "/day2" if stage.startswith("Day 2") else "/day3"
+    )
+
+    body = f"""
+    <div class="card">
+      <h2>{stage_html}</h2>
+      <p><strong>Question:</strong> {question_html}</p>
+      <p><strong>Case:</strong> {case_id_html}</p>
+      <p><strong>Evidence records:</strong>
+         {len(context["evidence"])}</p>
+
+      <div class="warning">
+        <strong>Deterministic assessment:</strong>
+        {finding_html}
+        <p>{assessment_html}</p>
+        <p>Confidence: {confidence_html}</p>
+      </div>
+
+      <h3>AI preliminary assessment</h3>
+      <pre>{ai_html}</pre>
+
+      <h3>Timeline</h3>
+      <pre>{timeline_html}</pre>
+
+      <h3>Correlations</h3>
+      <pre>{correlations_html}</pre>
+
+      <p><a href="{return_url}">Run another assessment</a></p>
+    </div>
+    """
+
+    return page("Analysis result", body)
 
 @app.post("/day2/analyze", response_class=HTMLResponse)
 def analyze_day2(question: str = Form(...)):
