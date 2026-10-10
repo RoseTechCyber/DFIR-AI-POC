@@ -17,14 +17,23 @@ from app.ai_provider import generate_analysis
 
 BASE_DIR = Path(__file__).resolve().parent
 
-EVIDENCE_FILE = Path(
+# Day 2: Identification and Preservation Evidence Source
+DAY2_EVIDENCE_FILE = Path(
     os.getenv(
-        "DFIR_EVIDENCE_FILE",
-        str(BASE_DIR / "data" / "cases" / "CASE-001" / "evidence.json"),
+        "DFIR_DAY2_EVIDENCE_FILE",
+        str(BASE_DIR / "data" / "cases" / "CASE-0001" / "evidence_1.json"),
     )
 ).resolve()
 
-CASE_ID = os.getenv("DFIR_CASE_ID", "CASE-001")
+# Day 3: Timeline and correlation Evidence Source
+EVIDENCE_FILE = Path(
+    os.getenv(
+        "DFIR_EVIDENCE_FILE",
+        str(BASE_DIR / "data" / "cases" / "CASE-0002" / "evidence_2.json"),
+    )
+).resolve()
+
+CASE_ID = os.getenv("DFIR_CASE_ID", "CASE-0001")
 AI_PROVIDER = os.getenv("AI_PROVIDER", "ollama").lower()
 MODEL = os.getenv(
     "GEMINI_MODEL" if AI_PROVIDER == "gemini" else "OLLAMA_MODEL",
