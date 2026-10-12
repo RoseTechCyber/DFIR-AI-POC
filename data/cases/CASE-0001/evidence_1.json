@@ -1,25 +1,187 @@
 [
-  {  
-    "evidence_id": "EV-0001",
-	"case_id": "CASE-0001",
-    "Time": "2026-10-07 14:31:02",
-    "Source": "Windows USB device history",
-	"Observation": "USB storage device connected."
+  {
+    "evidence_id": "C1-E001",
+    "case_id": "CASE-0001",
+    "artifact_type": "case_authorization",
+    "timestamp": "2026-09-14T08:00:00Z",
+    "object": "CASE-0001",
+    "action": "authorized",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "preparation",
+    "source_reference": "synthetic://CASE-0001/evidence/C1-E001",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "e949b688ccb2943c7ea68884ea603927b6a40658321f669167a49315b8e2bd62",
+    "artifact_payload": {
+      "scope": "Synthetic workstation investigation",
+      "examiner": "examiner01"
+    }
   },
   {
-	"evidence_id": "EV-0002",
-	"case_id": "CASE-0001",
-    "Time": "2026-10-07 14:33:17",
-    "Source": "Windows file access log",
-	"Observation": "File Confidential_Project_Report.docx  was accessed."
+    "evidence_id": "C1-E002",
+    "case_id": "CASE-0001",
+    "artifact_type": "evidence_inventory",
+    "timestamp": "2026-09-14T08:15:00Z",
+    "object": "WORKSTATION-01",
+    "action": "identified",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "identification",
+    "source_reference": "synthetic://CASE-0001/evidence/C1-E002",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "77be3f14996e1404c51c0cae4fca0956f0e5e809591ea422c6f06c94da86a3e4",
+    "artifact_payload": {
+      "device_type": "workstation",
+      "source": "synthetic evidence inventory"
+    }
   },
   {
-    "evidence_id": "EV-0003",
-	"case_id": "CASE-0001",
-    "Time": "2026-10-07 14:40:11",
-    "Source": "Windows USB device history",
-	"Observation": "USB storage device disconnected."
+    "evidence_id": "C1-E003",
+    "case_id": "CASE-0001",
+    "artifact_type": "preservation_record",
+    "timestamp": "2026-09-14T08:30:00Z",
+    "object": "DISK-001",
+    "action": "preservation_reviewed",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "preservation",
+    "source_reference": "synthetic://CASE-0001/evidence/C1-E003",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "f1ec75126bdb52a22211898d4a65978313be2419f392d7ee720a43bb849ecb55",
+    "artifact_payload": {
+      "write_blocker_recorded": true,
+      "chain_of_custody_verified": false,
+      "note": "Independent verification still required"
+    }
   },
-{"Question": "Does this evidence prove that Confidential_Project_Report.docx was copied to the USB device"}
-  
+  {
+    "evidence_id": "C1-E004",
+    "case_id": "CASE-0001",
+    "artifact_type": "acquisition_record",
+    "timestamp": "2026-09-14T09:00:00Z",
+    "object": "IMAGE-001",
+    "action": "acquisition_documented",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "acquisition",
+    "source_reference": "synthetic://CASE-0001/evidence/C1-E004",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "1253690eddd660a003c0c3085416196458e87b932465fc9aaf6c43bd38ba92c4",
+    "artifact_payload": {
+      "image_reference": "synthetic://CASE-0001/IMAGE-001",
+      "acquisition_method": "synthetic fixture",
+      "acquisition_verified": false
+    }
+  },
+  {
+    "evidence_id": "C1-E005",
+    "case_id": "CASE-0001",
+    "artifact_type": "filesystem_file",
+    "timestamp": "2026-09-14T09:30:00Z",
+    "object": "C:/Users/analyst01/Documents/Report.docx",
+    "action": "found",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "examination",
+    "source_reference": "synthetic://CASE-0001/evidence/C1-E005",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "823450b65504f14e85718db5c37ea58aceb149e3056b8c590524732e3fb63ffc",
+    "artifact_payload": {
+      "file_size": 18432,
+      "extension": ".docx",
+      "source": "synthetic filesystem record"
+    }
+  },
+  {
+    "evidence_id": "C1-E006",
+    "case_id": "CASE-0001",
+    "artifact_type": "preservation_hash",
+    "timestamp": "2026-09-14T09:35:00Z",
+    "object": "IMAGE-001",
+    "action": "hash_fixture_calculated",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "preservation",
+    "source_reference": "synthetic://CASE-0001/evidence/C1-E006",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "8ee2ff3d2896f984a159d7284785e07afb659df9eec09f5be51af928cc71c485",
+    "artifact_payload": {
+      "algorithm": "SHA-256",
+      "scope": "synthetic artifact payload",
+      "note": "Not a hash of a real disk image"
+    }
+  },
+  {
+    "evidence_id": "C1-E007",
+    "case_id": "CASE-0001",
+    "artifact_type": "validation_check",
+    "timestamp": "2026-09-14T10:00:00Z",
+    "object": "IMAGE-001",
+    "action": "review_required",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "validation",
+    "source_reference": "synthetic://CASE-0001/evidence/C1-E007",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "b2e710f8d7ef7a8abbab274fa5efca6b21904b5f0479fae38d33cf1f7d1161d5",
+    "artifact_payload": {
+      "hash_recalculation_required": true,
+      "chain_of_custody_review_required": true
+    }
+  },
+  {
+    "evidence_id": "C1-E008",
+    "case_id": "CASE-0001",
+    "artifact_type": "report_finding",
+    "timestamp": "2026-09-14T11:00:00Z",
+    "object": "CASE-0001",
+    "action": "drafted",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "reporting",
+    "source_reference": "synthetic://CASE-0001/evidence/C1-E008",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "794f42678d8f10fda0b90ee9556221f84540afe6ff4e44395d8f9ac522a8297a",
+    "artifact_payload": {
+      "finding": "A synthetic file record was identified",
+      "limitations": [
+        "No real disk image examined"
+      ]
+    }
+  },
+  {
+    "evidence_id": "C1-E009",
+    "case_id": "CASE-0001",
+    "artifact_type": "examiner_review",
+    "timestamp": "2026-09-14T11:30:00Z",
+    "object": "CASE-0001",
+    "action": "pending",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "presentation",
+    "source_reference": "synthetic://CASE-0001/evidence/C1-E009",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "565fbf66af465be98deca772d45a6b6bd1d69b0d4c90ce8bcc38cf5a6773ca9a",
+    "artifact_payload": {
+      "review_status": "pending examiner approval"
+    }
+  }
 ]

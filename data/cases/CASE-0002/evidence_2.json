@@ -1,75 +1,202 @@
 [
   {
-    "evidence_id": "EV-0001",
+    "evidence_id": "C2-E001",
+    "case_id": "CASE-0002",
+    "artifact_type": "case_authorization",
+    "timestamp": "2026-09-15T08:00:00Z",
+    "object": "CASE-0002",
+    "action": "authorized",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "preparation",
+    "source_reference": "synthetic://CASE-0002/evidence/C2-E001",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "76e3e9cb1d0a060644ad34df513535511f82542487739307d062f7a4712a5269",
+    "artifact_payload": {
+      "scope": "Synthetic USB and file-access investigation"
+    }
+  },
+  {
+    "evidence_id": "C2-E002",
+    "case_id": "CASE-0002",
+    "artifact_type": "evidence_inventory",
+    "timestamp": "2026-09-15T08:15:00Z",
+    "object": "WORKSTATION-02",
+    "action": "identified",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "identification",
+    "source_reference": "synthetic://CASE-0002/evidence/C2-E002",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "77be3f14996e1404c51c0cae4fca0956f0e5e809591ea422c6f06c94da86a3e4",
+    "artifact_payload": {
+      "device_type": "workstation",
+      "source": "synthetic evidence inventory"
+    }
+  },
+  {
+    "evidence_id": "C2-E003",
     "case_id": "CASE-0002",
     "artifact_type": "usb_connection",
-    "timestamp": "2026-10-07T14:31:12Z",
-    "subject": "USER01",
+    "timestamp": "2026-09-15T10:00:00Z",
+    "object": "USB-DEVICE-01",
     "action": "connected",
-    "object": "USB_DEVICE_7",
-    "value": {
-      "vendor": "Example",
-      "serial": "USB12345"
-    },
-    "tool": "artifact_parser",
-    "confidence": 1.0,
-    "source_reference": "registry://USBSTOR/USB12345",
-    "provenance": {
-      "source_image": "disk01.E01",
-      "source_artifact": "USBSTOR"
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": "WORKSTATION-02",
+    "source_user": null,
+    "lifecycle_stage": "examination",
+    "source_reference": "synthetic://CASE-0002/evidence/C2-E003",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "c77fe55e39d8f2641ff4e0abb22f9556e365342481815b5c5ecd41f0ded6c0ab",
+    "artifact_payload": {
+      "host": "WORKSTATION-02",
+      "source": "synthetic USB event"
     }
   },
   {
-    "evidence_id": "EV-0002",
-    "case_id": "CASE-0002",
-    "artifact_type": "process",
-    "timestamp": "2026-10-07T14:32:05Z",
-    "subject": "USER01",
-    "action": "started",
-    "object": "powershell.exe",
-    "value": {
-      "pid": 4120
-    },
-    "tool": "process_parser",
-    "confidence": 1.0,
-    "source_reference": "memory://process/4120",
-    "provenance": {
-      "source_image": "memory.raw"
-    }
-  },
-  {
-    "evidence_id": "EV-0003",
+    "evidence_id": "C2-E004",
     "case_id": "CASE-0002",
     "artifact_type": "file_access",
-    "timestamp": "2026-10-07T14:33:18Z",
-    "subject": "USER01",
-    "action": "accessed",
+    "timestamp": "2026-09-15T10:03:00Z",
     "object": "Confidential.docx",
-    "value": {
-      "path": "C:\\Users\\USER01\\Documents\\Confidential.docx"
-    },
-    "tool": "filesystem_parser",
-    "confidence": 1.0,
-    "source_reference": "ntfs://file/Confidential.docx",
-    "provenance": {
-      "source_image": "disk01.E01"
+    "action": "accessed",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": "WORKSTATION-02",
+    "source_user": "analyst01",
+    "lifecycle_stage": "examination",
+    "source_reference": "synthetic://CASE-0002/evidence/C2-E004",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "0cd64b9f7a4b5a9c3e4d1344754bf3f4c028c7cd3a8d3f5152a2b7d9ecea012c",
+    "artifact_payload": {
+      "host": "WORKSTATION-02",
+      "user": "analyst01",
+      "source": "synthetic file-access event"
     }
   },
   {
-    "evidence_id": "EV-0004",
+    "evidence_id": "C2-E005",
     "case_id": "CASE-0002",
     "artifact_type": "usb_connection",
-    "timestamp": "2026-10-07T14:40:22Z",
-    "subject": "USER01",
+    "timestamp": "2026-09-15T10:10:00Z",
+    "object": "USB-DEVICE-01",
     "action": "disconnected",
-    "object": "USB_DEVICE_7",
-    "value": null,
-    "tool": "artifact_parser",
-    "confidence": 1.0,
-    "source_reference": "registry://USBSTOR/USB12345",
-    "provenance": {
-      "source_image": "disk01.E01",
-      "source_artifact": "USBSTOR"
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": "WORKSTATION-02",
+    "source_user": null,
+    "lifecycle_stage": "examination",
+    "source_reference": "synthetic://CASE-0002/evidence/C2-E005",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "c77fe55e39d8f2641ff4e0abb22f9556e365342481815b5c5ecd41f0ded6c0ab",
+    "artifact_payload": {
+      "host": "WORKSTATION-02",
+      "source": "synthetic USB event"
+    }
+  },
+  {
+    "evidence_id": "C2-E006",
+    "case_id": "CASE-0002",
+    "artifact_type": "timeline_event",
+    "timestamp": "2026-09-15T10:15:00Z",
+    "object": "CASE-0002",
+    "action": "timeline_built",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "analysis",
+    "source_reference": "synthetic://CASE-0002/evidence/C2-E006",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "8e169c0ac6d185769ce357278779ee6a65e48f90b6d3badad3bbe0a837322095",
+    "artifact_payload": {
+      "events_considered": 3,
+      "observation": "File access occurred during the recorded USB session"
+    }
+  },
+  {
+    "evidence_id": "C2-E007",
+    "case_id": "CASE-0002",
+    "artifact_type": "validation_check",
+    "timestamp": "2026-09-15T10:30:00Z",
+    "object": "Confidential.docx",
+    "action": "transfer_not_proven",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "validation",
+    "source_reference": "synthetic://CASE-0002/evidence/C2-E007",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "bf4d9339e7c832d9c57394be0971a81c5b681408cebb4a84652436257b1296a7",
+    "artifact_payload": {
+      "direct_copy_artifact": false,
+      "destination_file_confirmed": false,
+      "note": "Temporal correlation does not prove copying"
+    }
+  },
+  {
+    "evidence_id": "C2-E008",
+    "case_id": "CASE-0002",
+    "artifact_type": "report_finding",
+    "timestamp": "2026-09-15T11:00:00Z",
+    "object": "CASE-0002",
+    "action": "drafted",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "reporting",
+    "source_reference": "synthetic://CASE-0002/evidence/C2-E008",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "36ed899c853aac260dc9c287f4de883fa9628d61f4ddd95e96fd34ffd42f34f6",
+    "artifact_payload": {
+      "finding": "File access coincided with a recorded USB session",
+      "conclusion": "File transfer not proven"
+    }
+  },
+  {
+    "evidence_id": "C2-E009",
+    "case_id": "CASE-0002",
+    "artifact_type": "examiner_review",
+    "timestamp": "2026-09-15T11:30:00Z",
+    "object": "CASE-0002",
+    "action": "pending",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "presentation",
+    "source_reference": "synthetic://CASE-0002/evidence/C2-E009",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "565fbf66af465be98deca772d45a6b6bd1d69b0d4c90ce8bcc38cf5a6773ca9a",
+    "artifact_payload": {
+      "review_status": "pending examiner approval"
+    }
+  },
+  {
+    "evidence_id": "C2-E010",
+    "case_id": "CASE-0002",
+    "artifact_type": "preservation_record",
+    "timestamp": "2026-09-15T08:30:00Z",
+    "object": "USB-DEVICE-01",
+    "action": "preservation_reviewed",
+    "tool_name": "synthetic-fixture",
+    "evidence_source": "synthetic",
+    "source_host": null,
+    "source_user": null,
+    "lifecycle_stage": "preservation",
+    "source_reference": "synthetic://CASE-0002/evidence/C2-E010",
+    "provenance": "Synthetic fixture; SHA-256 covers artifact_payload only.",
+    "sha256": "3326d1e57641cc556968a82196f3e5e2c9cbac89f1cd0af3dd3ddc9be42472e4",
+    "artifact_payload": {
+      "acquisition_verified": false,
+      "note": "No physical USB image supplied"
     }
   }
 ]
