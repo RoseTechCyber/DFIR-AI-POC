@@ -17,7 +17,7 @@ services:
       - key: GEMINI_API_KEY
         sync: false
 
-      - key: AI_PROVIDER
+      - key: AI_PROVIDER_2
         value: ollama
 
       - key: OLLAMA_MODEL
