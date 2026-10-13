@@ -17,5 +17,12 @@ services:
       - key: GEMINI_API_KEY
         sync: false
 
+      - key: AI_PROVIDER
+        value: ollama
+
+      - key: OLLAMA_MODEL
+        value: qwen2.5:0.5b
+
       - key: DFIR_CASE_ID
         value: CASE-001
+        
